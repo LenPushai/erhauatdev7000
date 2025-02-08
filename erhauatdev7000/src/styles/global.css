@@ -1,0 +1,51 @@
+/* ✅ Apply Google Fonts */
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+}
+
+/* ✅ Bootstrap Utility Overrides */
+.container {
+  max-width: 1200px;
+}
+
+/* ✅ Sidebar Customization */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #ddd;
+}
+
+.sidebar .nav-link {
+  color: #333;
+}
+
+.sidebar .nav-link:hover, .nav-link.router-link-active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* ✅ Navbar Styling */
+.navbar {
+  width: 100%;
+  height: 60px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Button Customization */
+.btn-custom {
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn-custom:hover {
+  background-color: #0056b3;
+}

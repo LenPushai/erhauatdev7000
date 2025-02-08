@@ -1,0 +1,18 @@
+/* ✅ Custom Bootstrap Overrides */
+.btn-primary {
+  background-color: #007bff;
+  border-color: #0056b3;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+
+.text-primary {
+  color: #007bff !important;
+}
+
+.bg-primary {
+  background-color: #007bff !important;
+}
