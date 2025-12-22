@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f1960cfe-fd47-4e37-9341-9f059789bef7" name="Changes" comment="Prod - Commit to the lord and he will establish your plans" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$/lenklopper02_BACKUP_20251222_1324" value="da049dac9a1d9caa87742f194485ab9e7f826115" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2zvwQPU0iRUyDixbsmXU8VciUSp" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ErhaOpsApplication.executor": "Run",
+    "Application.PasswordHashGenerator.executor": "Run",
+    "LombokPluginIS_LOMBOK_JPS_FIX_ENABLED": "false",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.ErhaOpsApplication (1).executor": "Run",
+    "Spring Boot.ErhaOpsApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/lenkl/IdeaProjects/lenklopper02",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "settings.sync",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="Spring Boot.ErhaOpsApplication">
+    <configuration name="ErhaOpsApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="UNNAMED_CLASS_CONFIGURATION" value="true" />
+      <option name="MAIN_CLASS_NAME" value="ErhaOpsApplication" />
+      <module name="erha-ops-platform" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PasswordHashGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.erha.ops.util.PasswordHashGenerator" />
+      <module name="erha-ops-platform" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.erha.ops.util.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ErhaOpsApplication (1)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="erha-ops-platform" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="ErhaOpsApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ErhaOpsApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="erha-ops-platform" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.erha.ops.ErhaOpsApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Spring Boot.ErhaOpsApplication (1)" />
+        <item itemvalue="Application.PasswordHashGenerator" />
+        <item itemvalue="Application.ErhaOpsApplication" />
+        <item itemvalue="Spring Boot.ErhaOpsApplication (1)" />
+        <item itemvalue="Application.ErhaOpsApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26927.53" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.26927.53" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="StructureViewState">
+    <option name="selectedTab" value="Logical" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f1960cfe-fd47-4e37-9341-9f059789bef7" name="Changes" comment="" />
+      <created>1753711580562</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1753711580562</updated>
+      <workItem from="1753711582824" duration="441000" />
+      <workItem from="1753867908620" duration="1200000" />
+      <workItem from="1753876187155" duration="963000" />
+      <workItem from="1754588724029" duration="215000" />
+      <workItem from="1754588995524" duration="55000" />
+      <workItem from="1754589186721" duration="35000" />
+      <workItem from="1754589305049" duration="4000" />
+      <workItem from="1754589535347" duration="48000" />
+      <workItem from="1754589652783" duration="9261000" />
+      <workItem from="1755934605085" duration="149000" />
+      <workItem from="1758527598471" duration="12745000" />
+      <workItem from="1758554070278" duration="134000" />
+      <workItem from="1758594624167" duration="69163000" />
+      <workItem from="1758964308830" duration="565000" />
+      <workItem from="1759903729707" duration="22423000" />
+      <workItem from="1760146185965" duration="30321000" />
+      <workItem from="1760981748066" duration="802000" />
+      <workItem from="1761053067507" duration="967000" />
+      <workItem from="1761147508952" duration="941000" />
+      <workItem from="1761962233519" duration="2845000" />
+      <workItem from="1762023109868" duration="30826000" />
+      <workItem from="1762175307209" duration="6478000" />
+      <workItem from="1762185579761" duration="13000" />
+      <workItem from="1762202154047" duration="16115000" />
+      <workItem from="1762309060768" duration="4320000" />
+      <workItem from="1762396296484" duration="715000" />
+      <workItem from="1762402712818" duration="6294000" />
+      <workItem from="1762519691930" duration="3960000" />
+      <workItem from="1762930284358" duration="2691000" />
+      <workItem from="1763259809640" duration="26497000" />
+      <workItem from="1763299514717" duration="161000" />
+      <workItem from="1763299694359" duration="30375000" />
+      <workItem from="1763686817943" duration="31239000" />
+      <workItem from="1763912378465" duration="12091000" />
+      <workItem from="1764061943752" duration="1358000" />
+      <workItem from="1764073384746" duration="1012000" />
+      <workItem from="1764834420794" duration="70261000" />
+      <workItem from="1765282978243" duration="19363000" />
+      <workItem from="1765508629338" duration="12622000" />
+      <workItem from="1765750750090" duration="4693000" />
+      <workItem from="1765758086041" duration="43437000" />
+      <workItem from="1766045657206" duration="4473000" />
+      <workItem from="1766060214060" duration="22705000" />
+      <workItem from="1766145922298" duration="28659000" />
+    </task>
+    <task id="LOCAL-00001" summary="Prod - 14">
+      <option name="closed" value="true" />
+      <created>1758600560914</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1758600560914</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Prod - Commit to the lord and he will establish your plans">
+      <option name="closed" value="true" />
+      <created>1762033268054</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1762033268054</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Prod - Commit to the lord and he will establish your plans">
+      <option name="closed" value="true" />
+      <created>1763312038207</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1763312038207</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.key" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="SHOW_ROOT_NAMES" value="true" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Quote and Contract in progress" />
+    <MESSAGE value="2 - 250935" />
+    <MESSAGE value="2 - 250925" />
+    <MESSAGE value="Prod - 18" />
+    <MESSAGE value="Prod - 14" />
+    <MESSAGE value="FORTRESS BACKUP - 2025-11-23 14:04 - DocuSign Integration Complete" />
+    <MESSAGE value="Prod - Commit to the lord and he will establish your plans" />
+    <option name="LAST_COMMIT_MESSAGE" value="Prod - Commit to the lord and he will establish your plans" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/erha-ops-quote-management/src/main/java/com/erha/quote/model/QuoteStatus.java</url>
+          <line>20</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
