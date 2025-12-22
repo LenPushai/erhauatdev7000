@@ -1,0 +1,668 @@
+package com.erha.ops.controller;
+
+import com.erha.ops.rfq.entity.RFQ;
+import com.erha.ops.rfq.enums.RfqStatus;
+import com.erha.ops.rfq.repository.RFQRepository;
+import com.erha.ops.service.DocuSignService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.ArrayList;
+
+@RestController
+@RequestMapping("/api/v1")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"})
+public class RfqController {
+
+    private static final Logger logger = LoggerFactory.getLogger(RfqController.class);
+
+    @Autowired
+    private RFQRepository rfqRepository;
+
+    @Autowired(required = false)
+    private DocuSignService docuSignService;
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
+
+    @GetMapping("/rfqs")
+    public ResponseEntity<Map<String, Object>> getAllRfqs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        logger.info("Fetching RFQs - page: {}, size: {}", page, size);
+
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+            Page<RFQ> rfqPage = rfqRepository.findAll(pageable);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", rfqPage.getContent());
+            response.put("totalElements", rfqPage.getTotalElements());
+            response.put("totalPages", rfqPage.getTotalPages());
+            response.put("currentPage", page);
+
+            logger.info("Found {} RFQs, total: {}", rfqPage.getContent().size(), rfqPage.getTotalElements());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error fetching RFQs: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/rfqs/status/{status}")
+    public ResponseEntity<Map<String, Object>> getRfqsByStatus(
+            @PathVariable String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        logger.info("Fetching RFQs by status: {}", status);
+
+        try {
+            RfqStatus rfqStatus = mapLegacyStatus(status);
+            logger.info("Mapped '{}' to enum: {}", status, rfqStatus);
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+            Page<RFQ> rfqPage = rfqRepository.findByStatus(rfqStatus, pageable);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", rfqPage.getContent());
+            response.put("totalElements", rfqPage.getTotalElements());
+            response.put("totalPages", rfqPage.getTotalPages());
+            response.put("currentPage", page);
+            response.put("requestedStatus", status);
+            response.put("mappedStatus", rfqStatus.toString());
+
+            logger.info("Found {} RFQs with status {}", rfqPage.getContent().size(), rfqStatus);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("Invalid status '{}': {}", status, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status: " + status));
+        } catch (Exception e) {
+            logger.error("Error fetching RFQs by status: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/rfqs/{id}")
+    public ResponseEntity<RFQ> getRfqById(@PathVariable Long id) {
+        logger.info("Fetching RFQ by ID: {}", id);
+
+        Optional<RFQ> rfq = rfqRepository.findById(id);
+        if (rfq.isPresent()) {
+            logger.info("Found RFQ: {}", rfq.get().getJobNo());
+            return ResponseEntity.ok(rfq.get());
+        } else {
+            logger.warn("RFQ not found with ID: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/rfqs")
+    public ResponseEntity<RFQ> createRfq(@RequestBody RFQ rfq) {
+        logger.info("Creating new RFQ: {}", rfq.getJobNo());
+
+        try {
+            if (rfq.getCreatedAt() == null) {
+                rfq.setCreatedAt(LocalDateTime.now());
+            }
+            if (rfq.getIsDeleted() == null) {
+                rfq.setIsDeleted(false);
+            }
+
+            RFQ created = rfqRepository.save(rfq);
+            logger.info("Created RFQ: {} - {}", created.getJobNo(), created.getDescription());
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(created);
+
+        } catch (Exception e) {
+            logger.error("Error creating RFQ: {}", e.getMessage(), e);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/rfqs/{id}")
+    public ResponseEntity<RFQ> updateRfq(@PathVariable Long id, @RequestBody RFQ rfqDetails) {
+        logger.info("Updating RFQ with ID: {}", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+
+            if (existingRfq.isEmpty()) {
+                logger.warn("RFQ not found with ID: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+
+            if (rfqDetails.getJobNo() != null) rfq.setJobNo(rfqDetails.getJobNo());
+            if (rfqDetails.getClientId() != null) rfq.setClientId(rfqDetails.getClientId());
+            if (rfqDetails.getContactPerson() != null) rfq.setContactPerson(rfqDetails.getContactPerson());
+            if (rfqDetails.getContactEmail() != null) rfq.setContactEmail(rfqDetails.getContactEmail());
+            if (rfqDetails.getContactPhone() != null) rfq.setContactPhone(rfqDetails.getContactPhone());
+            if (rfqDetails.getOperatingEntity() != null) rfq.setOperatingEntity(rfqDetails.getOperatingEntity());
+            if (rfqDetails.getDescription() != null) rfq.setDescription(rfqDetails.getDescription());
+            if (rfqDetails.getDepartment() != null) rfq.setDepartment(rfqDetails.getDepartment());
+            if (rfqDetails.getRequestDate() != null) rfq.setRequestDate(rfqDetails.getRequestDate());
+            if (rfqDetails.getRequiredDate() != null) rfq.setRequiredDate(rfqDetails.getRequiredDate());
+            if (rfqDetails.getPriority() != null) rfq.setPriority(rfqDetails.getPriority());
+            if (rfqDetails.getEstimatedValue() != null) rfq.setEstimatedValue(rfqDetails.getEstimatedValue());
+            if (rfqDetails.getStatus() != null) rfq.setStatus(rfqDetails.getStatus());
+            if (rfqDetails.getAssignedTo() != null) rfq.setAssignedTo(rfqDetails.getAssignedTo());
+            if (rfqDetails.getIsDeleted() != null) rfq.setIsDeleted(rfqDetails.getIsDeleted());
+            if (rfqDetails.getQuoteNumber() != null) rfq.setQuoteNumber(rfqDetails.getQuoteNumber());
+            if (rfqDetails.getQuoteValueExclVat() != null) rfq.setQuoteValueExclVat(rfqDetails.getQuoteValueExclVat());
+            if (rfqDetails.getQuoteValueInclVat() != null) rfq.setQuoteValueInclVat(rfqDetails.getQuoteValueInclVat());
+            if (rfqDetails.getQuoteDate() != null) rfq.setQuoteDate(rfqDetails.getQuoteDate());
+            if (rfqDetails.getQuoteValidUntil() != null) rfq.setQuoteValidUntil(rfqDetails.getQuoteValidUntil());
+            if (rfqDetails.getQuoteStatus() != null) rfq.setQuoteStatus(rfqDetails.getQuoteStatus());
+            if (rfqDetails.getOrderNumber() != null) rfq.setOrderNumber(rfqDetails.getOrderNumber());
+            if (rfqDetails.getOrderDate() != null) rfq.setOrderDate(rfqDetails.getOrderDate());
+            if (rfqDetails.getInvoiceNumber() != null) rfq.setInvoiceNumber(rfqDetails.getInvoiceNumber());
+            if (rfqDetails.getInvoiceDate() != null) rfq.setInvoiceDate(rfqDetails.getInvoiceDate());
+            if (rfqDetails.getInvoiceStatus() != null) rfq.setInvoiceStatus(rfqDetails.getInvoiceStatus());
+
+            RFQ updatedRfq = rfqRepository.save(rfq);
+            logger.info("Updated RFQ: {} - {}", updatedRfq.getJobNo(), updatedRfq.getDescription());
+            return ResponseEntity.ok(updatedRfq);
+
+        } catch (Exception e) {
+            logger.error("Error updating RFQ: {}", e.getMessage(), e);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PatchMapping("/rfqs/{id}")
+    public ResponseEntity<RFQ> partialUpdateRfq(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        logger.info("Partial update RFQ with ID: {} - Fields: {}", id, updates.keySet());
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+
+            if (existingRfq.isEmpty()) {
+                logger.warn("RFQ not found with ID: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+
+            if (updates.containsKey("jobNo")) rfq.setJobNo((String) updates.get("jobNo"));
+            if (updates.containsKey("description")) rfq.setDescription((String) updates.get("description"));
+            if (updates.containsKey("department")) rfq.setDepartment((String) updates.get("department"));
+            if (updates.containsKey("estimatedValue")) {
+                Object value = updates.get("estimatedValue");
+                rfq.setEstimatedValue(new BigDecimal(value.toString()));
+            }
+            if (updates.containsKey("status")) {
+                String statusStr = (String) updates.get("status");
+                rfq.setStatus(RfqStatus.valueOf(statusStr.toUpperCase()));
+            }
+            if (updates.containsKey("requiredDate")) {
+                String dateStr = (String) updates.get("requiredDate");
+                rfq.setRequiredDate(LocalDate.parse(dateStr));
+            }
+            if (updates.containsKey("assignedTo")) {
+                rfq.setAssignedTo((String) updates.get("assignedTo"));
+            }
+            if (updates.containsKey("isDeleted")) {
+                rfq.setIsDeleted((Boolean) updates.get("isDeleted"));
+            }
+            if (updates.containsKey("contactEmail")) {
+                rfq.setContactEmail((String) updates.get("contactEmail"));
+            }
+            if (updates.containsKey("contactPerson")) {
+                rfq.setContactPerson((String) updates.get("contactPerson"));
+            }
+            if (updates.containsKey("contactPhone")) {
+                rfq.setContactPhone((String) updates.get("contactPhone"));
+            }
+            if (updates.containsKey("quoteNumber")) rfq.setQuoteNumber((String) updates.get("quoteNumber"));
+            if (updates.containsKey("quoteValueExclVat")) {
+                rfq.setQuoteValueExclVat(new BigDecimal(updates.get("quoteValueExclVat").toString()));
+            }
+            if (updates.containsKey("quoteValueInclVat")) {
+                rfq.setQuoteValueInclVat(new BigDecimal(updates.get("quoteValueInclVat").toString()));
+            }
+            if (updates.containsKey("quoteDate")) {
+                rfq.setQuoteDate(LocalDate.parse((String) updates.get("quoteDate")));
+            }
+            if (updates.containsKey("quoteValidUntil")) {
+                rfq.setQuoteValidUntil(LocalDate.parse((String) updates.get("quoteValidUntil")));
+            }
+            if (updates.containsKey("quoteStatus")) rfq.setQuoteStatus((String) updates.get("quoteStatus"));
+            if (updates.containsKey("docusignEnvelopeId")) rfq.setDocusignEnvelopeId((String) updates.get("docusignEnvelopeId"));
+            if (updates.containsKey("docusignStatus")) rfq.setDocusignStatus((String) updates.get("docusignStatus"));
+            if (updates.containsKey("signedDate")) {
+                rfq.setSignedDate(LocalDate.parse((String) updates.get("signedDate")));
+            }
+            if (updates.containsKey("orderNumber")) rfq.setOrderNumber((String) updates.get("orderNumber"));
+            if (updates.containsKey("orderDate")) {
+                rfq.setOrderDate(LocalDate.parse((String) updates.get("orderDate")));
+            }
+            if (updates.containsKey("invoiceNumber")) rfq.setInvoiceNumber((String) updates.get("invoiceNumber"));
+            if (updates.containsKey("invoiceDate")) {
+                rfq.setInvoiceDate(LocalDate.parse((String) updates.get("invoiceDate")));
+            }
+            if (updates.containsKey("invoiceStatus")) rfq.setInvoiceStatus((String) updates.get("invoiceStatus"));
+
+            RFQ updatedRfq = rfqRepository.save(rfq);
+            logger.info("Partial update successful for RFQ: {}", updatedRfq.getJobNo());
+            return ResponseEntity.ok(updatedRfq);
+
+        } catch (Exception e) {
+            logger.error("Error in partial update: {}", e.getMessage(), e);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/rfqs/{id}")
+    public ResponseEntity<Map<String, Object>> deleteRfq(@PathVariable Long id) {
+        logger.info("Deleting RFQ with ID: {}", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+
+            if (existingRfq.isEmpty()) {
+                logger.warn("RFQ not found with ID: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+            rfq.setIsDeleted(true);
+            rfqRepository.save(rfq);
+
+            logger.info("Soft deleted RFQ: {}", rfq.getJobNo());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "RFQ soft deleted successfully");
+            response.put("rfqId", id);
+            response.put("jobNo", rfq.getJobNo());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error deleting RFQ: {}", e.getMessage(), e);
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/rfqs/{id}/upload-quote-pdf")
+    public ResponseEntity<Map<String, Object>> uploadQuotePdf(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+
+        logger.info("Uploading Quote PDF for RFQ ID: {}", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+            if (existingRfq.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.equals("application/pdf")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Only PDF files are allowed"));
+            }
+
+            Path uploadPath = Paths.get(uploadDir, "quotes");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : ".pdf";
+            String filename = "Quote_" + rfq.getJobNo().replace("/", "-") + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+
+            Path filePath = uploadPath.resolve(filename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            rfq.setQuotePdfPath(filePath.toString());
+            rfqRepository.save(rfq);
+
+            logger.info("Quote PDF uploaded successfully: {}", filePath);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Quote PDF uploaded successfully",
+                    "filename", filename,
+                    "path", filePath.toString()
+            ));
+
+        } catch (IOException e) {
+            logger.error("Error uploading file: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to upload file: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/rfqs/{id}/quote-pdf")
+    public ResponseEntity<Resource> getQuotePdf(@PathVariable Long id) {
+        logger.info("Fetching Quote PDF for RFQ ID: {}", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+            if (existingRfq.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+            if (rfq.getQuotePdfPath() == null || rfq.getQuotePdfPath().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Path filePath = Paths.get(rfq.getQuotePdfPath());
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filePath.getFileName().toString() + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error fetching PDF: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/rfqs/{id}/send-for-signature")
+    public ResponseEntity<Map<String, Object>> sendForSignature(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, Object> request) {
+
+        logger.info("Sending RFQ {} for signature via DocuSign", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+            if (existingRfq.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+
+            if (rfq.getQuotePdfPath() == null || rfq.getQuotePdfPath().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Please upload a Quote PDF first"
+                ));
+            }
+
+            if (rfq.getContactEmail() == null || rfq.getContactEmail().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Contact email is required for DocuSign"
+                ));
+            }
+
+            List<DocuSignService.Signatory> managers = new ArrayList<>();
+            List<DocuSignService.Signatory> clients = new ArrayList<>();
+
+            if (request != null && request.containsKey("managers")) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> managerList = (List<Map<String, String>>) request.get("managers");
+                for (Map<String, String> m : managerList) {
+                    managers.add(new DocuSignService.Signatory(m.get("name"), m.get("email")));
+                }
+            }
+
+            if (request != null && request.containsKey("clients")) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> clientList = (List<Map<String, String>>) request.get("clients");
+                for (Map<String, String> c : clientList) {
+                    clients.add(new DocuSignService.Signatory(
+                            c.get("name") != null ? c.get("name") : "Customer",
+                            c.get("email")
+                    ));
+                }
+            }
+
+            if (clients.isEmpty()) {
+                clients.add(new DocuSignService.Signatory(
+                        rfq.getContactPerson() != null ? rfq.getContactPerson() : "Customer",
+                        rfq.getContactEmail()
+                ));
+            }
+
+            if (managers.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "At least one manager is required"
+                ));
+            }
+
+            String envelopeId;
+            boolean isSimulated = false;
+
+            if (docuSignService != null && docuSignService.isConfigured()) {
+                logger.info("Sending RFQ {} to DocuSign with {} managers and {} clients",
+                        rfq.getJobNo(), managers.size(), clients.size());
+                envelopeId = docuSignService.sendRfqForSignatureMultiple(rfq, managers, clients);
+            } else {
+                envelopeId = "SIM-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+                logger.warn("DocuSign not configured - using simulated envelope: {}", envelopeId);
+                isSimulated = true;
+            }
+
+            rfq.setDocusignEnvelopeId(envelopeId);
+            rfq.setDocusignStatus("PENDING");
+            rfqRepository.save(rfq);
+
+            logger.info("Quote sent for signature. Envelope ID: {}", envelopeId);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", isSimulated ? "Quote sent for signature (SIMULATED)" : "Quote sent for signature successfully",
+                    "envelopeId", envelopeId,
+                    "status", "PENDING",
+                    "signerCount", managers.size() + clients.size(),
+                    "simulated", isSimulated
+            ));
+
+        } catch (Exception e) {
+            logger.error("Error sending for signature: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/rfqs/{id}/docusign-status")
+    public ResponseEntity<Map<String, Object>> getDocuSignStatus(@PathVariable Long id) {
+        logger.info("Checking DocuSign status for RFQ ID: {}", id);
+
+        try {
+            Optional<RFQ> existingRfq = rfqRepository.findById(id);
+            if (existingRfq.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            RFQ rfq = existingRfq.get();
+
+            if (rfq.getDocusignEnvelopeId() == null) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "NOT_SENT",
+                        "message", "Quote has not been sent for signature"
+                ));
+            }
+
+            if (docuSignService != null && !rfq.getDocusignEnvelopeId().startsWith("SIM-")) {
+                try {
+                    String status = docuSignService.getEnvelopeStatus(rfq.getDocusignEnvelopeId());
+
+                    if (!status.equalsIgnoreCase(rfq.getDocusignStatus())) {
+                        rfq.setDocusignStatus(status.toUpperCase());
+                        if (status.equalsIgnoreCase("completed") || status.equalsIgnoreCase("signed")) {
+                            rfq.setSignedDate(LocalDate.now());
+                            rfq.setQuoteStatus("ACCEPTED");
+                        }
+                        rfqRepository.save(rfq);
+                    }
+
+                    return ResponseEntity.ok(Map.of(
+                            "envelopeId", rfq.getDocusignEnvelopeId(),
+                            "status", status,
+                            "signedDate", rfq.getSignedDate() != null ? rfq.getSignedDate().toString() : null
+                    ));
+                } catch (Exception e) {
+                    logger.warn("Could not fetch DocuSign status: {}", e.getMessage());
+                }
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "envelopeId", rfq.getDocusignEnvelopeId(),
+                    "status", rfq.getDocusignStatus() != null ? rfq.getDocusignStatus() : "UNKNOWN",
+                    "signedDate", rfq.getSignedDate() != null ? rfq.getSignedDate().toString() : null
+            ));
+
+        } catch (Exception e) {
+            logger.error("Error checking DocuSign status: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/rfqs/export-pastel")
+    public ResponseEntity<?> exportRfqsToPastel(@RequestBody Map<String, Object> request) {
+        logger.info("Exporting RFQs to Pastel CSV format");
+
+        try {
+            @SuppressWarnings("unchecked")
+            List<Integer> rfqIds = (List<Integer>) request.get("rfqIds");
+
+            if (rfqIds == null || rfqIds.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No RFQs selected for export"));
+            }
+
+            logger.info("Exporting {} RFQs to Pastel: {}", rfqIds.size(), rfqIds);
+
+            List<RFQ> rfqs = new ArrayList<>();
+            for (Integer id : rfqIds) {
+                rfqRepository.findById(id.longValue()).ifPresent(rfqs::add);
+            }
+
+            if (rfqs.isEmpty()) {
+                logger.warn("No RFQs found for export");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No exportable RFQs found"));
+            }
+
+            StringBuilder csv = new StringBuilder();
+            csv.append("Account Code,Customer Name,Reference,Date,Amount Excl VAT,Amount Incl VAT,Description,Priority,Status,Contact Person,Contact Email,Contact Phone\n");
+
+            for (RFQ rfq : rfqs) {
+                csv.append(escapeCsv(rfq.getClientId() != null ? "C" + rfq.getClientId() : ""));
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getContactPerson() != null ? rfq.getContactPerson() : ""));
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getJobNo()));
+                csv.append(",");
+                csv.append(rfq.getRequestDate() != null ? rfq.getRequestDate().toString() : "");
+                csv.append(",");
+                csv.append(rfq.getEstimatedValue() != null ? rfq.getEstimatedValue().toString() : "0.00");
+                csv.append(",");
+                BigDecimal inclVat = rfq.getEstimatedValue() != null
+                        ? rfq.getEstimatedValue().multiply(new BigDecimal("1.15"))
+                        : BigDecimal.ZERO;
+                csv.append(inclVat.toString());
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getDescription() != null ? rfq.getDescription() : ""));
+                csv.append(",");
+                csv.append(rfq.getPriority() != null ? rfq.getPriority().toString() : "MEDIUM");
+                csv.append(",");
+                csv.append(rfq.getStatus() != null ? rfq.getStatus().toString() : "Draft");
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getContactPerson() != null ? rfq.getContactPerson() : ""));
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getContactEmail() != null ? rfq.getContactEmail() : ""));
+                csv.append(",");
+                csv.append(escapeCsv(rfq.getContactPhone() != null ? rfq.getContactPhone() : ""));
+                csv.append("\n");
+            }
+
+            String filename = "Pastel_Export_" + LocalDate.now().toString() + "_" + UUID.randomUUID().toString().substring(0, 8) + ".csv";
+            Path tempFile = Files.createTempFile("pastel_", ".csv");
+            Files.writeString(tempFile, csv.toString());
+
+            Resource resource = new UrlResource(tempFile.toUri());
+
+            logger.info("Pastel CSV export successful: {} RFQs exported to {}", rfqs.size(), filename);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error exporting to Pastel: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Export failed: " + e.getMessage()));
+        }
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) {
+            return "";
+        }
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    @GetMapping("/debug/rfqs/raw")
+    public ResponseEntity<List<RFQ>> getRawRfqs() {
+        logger.info("Debug: Fetching raw RFQs (no pagination)");
+        List<RFQ> rfqs = rfqRepository.findAll();
+        logger.info("Debug: Found {} total RFQs", rfqs.size());
+        return ResponseEntity.ok(rfqs);
+    }
+
+    private RfqStatus mapLegacyStatus(String status) {
+        return switch (status.toUpperCase()) {
+            case "APPROVED" -> RfqStatus.READY_FOR_QUOTE;
+            case "PENDING" -> RfqStatus.SUBMITTED;
+            case "IN_PROGRESS" -> RfqStatus.UNDER_REVIEW;
+            case "COMPLETED" -> RfqStatus.COMPLETED;
+            default -> RfqStatus.valueOf(status.toUpperCase());
+        };
+    }
+}

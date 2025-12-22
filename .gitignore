@@ -1,0 +1,13 @@
+target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+.DS_Store
+node_modules/
+.env
+application.properties.backup*
+*.key.old*
