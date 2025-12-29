@@ -204,6 +204,24 @@ public class RFQ {
     private String remarks; // Client-facing remarks
 
     // ============================================
+    // ENQ REPORT INFORMATION
+    // ============================================
+    @Column(name = "erha_department", length = 100)
+    private String erhaDepartment;
+
+    @Column(name = "assigned_quoter", length = 100)
+    private String assignedQuoter;
+
+    @Column(name = "media_received", length = 50)
+    private String mediaReceived;
+
+    @Column(name = "actions_required", length = 500)
+    private String actionsRequired;
+
+    @Column(name = "drawing_number", length = 200)
+    private String drawingNumber;
+
+    // ============================================
     // METADATA
     // ============================================
     @Column(name = "is_deleted")
@@ -385,6 +403,24 @@ public class RFQ {
 
     public String getInvoiceStatus() { return invoiceStatus; }
     public void setInvoiceStatus(String invoiceStatus) { this.invoiceStatus = invoiceStatus; }
+    // ============================================
+    // GETTERS AND SETTERS - ENQ Report Fields
+    // ============================================
+    public String getErhaDepartment() { return erhaDepartment; }
+    public void setErhaDepartment(String erhaDepartment) { this.erhaDepartment = erhaDepartment; }
+
+    public String getAssignedQuoter() { return assignedQuoter; }
+    public void setAssignedQuoter(String assignedQuoter) { this.assignedQuoter = assignedQuoter; }
+
+    public String getMediaReceived() { return mediaReceived; }
+    public void setMediaReceived(String mediaReceived) { this.mediaReceived = mediaReceived; }
+
+    public String getActionsRequired() { return actionsRequired; }
+    public void setActionsRequired(String actionsRequired) { this.actionsRequired = actionsRequired; }
+
+    public String getDrawingNumber() { return drawingNumber; }
+    public void setDrawingNumber(String drawingNumber) { this.drawingNumber = drawingNumber; }
+
 
     // ============================================
     // EQUALS, HASHCODE, TOSTRING

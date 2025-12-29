@@ -1,8 +1,7 @@
 package com.erha.ops.controller;
 
 import com.erha.ops.entity.*;
-import com.erha.ops.rfq.enums.ProjectType;
-import com.erha.ops.rfq.enums.RfqStatus;
+import com.erha.ops.rfq.enums.*;
 import com.erha.quote.model.QuoteStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +21,30 @@ public class EnumController {
     public ResponseEntity<Map<String, List<Map<String, String>>>> getAllEnums() {
         Map<String, List<Map<String, String>>> enums = new HashMap<>();
         
+        // RFQ related enums
         enums.put("rfqStatus", convertEnumToMap(RfqStatus.values()));
         enums.put("projectType", convertEnumToMap(ProjectType.values()));
+        
+        // ENQ Report enums
+        enums.put("actionsRequired", convertEnumToMap(ActionsRequired.values()));
+        enums.put("departments", convertEnumToMap(Department.values()));
+        enums.put("quoters", convertEnumToMap(Quoter.values()));
+        enums.put("mediaReceived", convertEnumToMap(MediaReceived.values()));
+        
+        // Quote related enums
         enums.put("quoteStatus", convertEnumToMap(QuoteStatus.values()));
+        
+        // Job/Workshop related enums
         enums.put("assignmentStatus", convertEnumToMap(AssignmentStatus.values()));
         enums.put("jobAssignmentStatus", convertEnumToMap(JobAssignmentStatus.values()));
         enums.put("workshopStatus", convertEnumToMap(WorkshopStatus.values()));
+        
+        // Delivery and signoff enums
         enums.put("deliveryNoteStatus", convertEnumToMap(DeliveryNoteStatus.values()));
         enums.put("holdingPointStatus", convertEnumToMap(HoldingPointStatus.values()));
         enums.put("signoffStatus", convertEnumToMap(SignoffStatus.values()));
+        
+        // Time tracking enums
         enums.put("timeEntryStatus", convertEnumToMap(TimeEntryStatus.values()));
         
         return ResponseEntity.ok(enums);

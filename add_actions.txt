@@ -1,0 +1,5 @@
+if (rfqDetails.getAssignedQuoter() != null) rfq.setAssignedQuoter(rfqDetails.getAssignedQuoter());
+            if (rfqDetails.getMediaReceived() != null) rfq.setMediaReceived(rfqDetails.getMediaReceived());
+            if (rfqDetails.getActionsRequired() != null) rfq.setActionsRequired(rfqDetails.getActionsRequired());
+            if (rfqDetails.getDrawingNumber() != null) rfq.setDrawingNumber(rfqDetails.getDrawingNumber());
+            if (rfqDetails.getErhaDepartment() != null) rfq.setErhaDepartment(rfqDetails.getErhaDepartment());

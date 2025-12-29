@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/v1")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178"})
 public class RfqController {
 
     private static final Logger logger = LoggerFactory.getLogger(RfqController.class);
@@ -188,6 +188,12 @@ public class RfqController {
             if (rfqDetails.getInvoiceNumber() != null) rfq.setInvoiceNumber(rfqDetails.getInvoiceNumber());
             if (rfqDetails.getInvoiceDate() != null) rfq.setInvoiceDate(rfqDetails.getInvoiceDate());
             if (rfqDetails.getInvoiceStatus() != null) rfq.setInvoiceStatus(rfqDetails.getInvoiceStatus());
+            // ✅ ENQ Report fields - ADDED
+            if (rfqDetails.getAssignedQuoter() != null) rfq.setAssignedQuoter(rfqDetails.getAssignedQuoter());
+            if (rfqDetails.getMediaReceived() != null) rfq.setMediaReceived(rfqDetails.getMediaReceived());
+            if (rfqDetails.getActionsRequired() != null) rfq.setActionsRequired(rfqDetails.getActionsRequired());
+            if (rfqDetails.getDrawingNumber() != null) rfq.setDrawingNumber(rfqDetails.getDrawingNumber());
+            if (rfqDetails.getErhaDepartment() != null) rfq.setErhaDepartment(rfqDetails.getErhaDepartment());
 
             RFQ updatedRfq = rfqRepository.save(rfq);
             logger.info("Updated RFQ: {} - {}", updatedRfq.getJobNo(), updatedRfq.getDescription());
@@ -294,6 +300,13 @@ public class RfqController {
             if (updates.containsKey("paymentMethod")) {
                 rfq.setPaymentMethod((String) updates.get("paymentMethod"));
             }
+
+            // ✅ ENQ Report fields
+            if (updates.containsKey("assignedQuoter")) rfq.setAssignedQuoter((String) updates.get("assignedQuoter"));
+            if (updates.containsKey("mediaReceived")) rfq.setMediaReceived((String) updates.get("mediaReceived"));
+            if (updates.containsKey("actionsRequired")) rfq.setActionsRequired((String) updates.get("actionsRequired"));
+            if (updates.containsKey("drawingNumber")) rfq.setDrawingNumber((String) updates.get("drawingNumber"));
+            if (updates.containsKey("erhaDepartment")) rfq.setErhaDepartment((String) updates.get("erhaDepartment"));
 
             RFQ updatedRfq = rfqRepository.save(rfq);
             logger.info("Partial update successful for RFQ: {}", updatedRfq.getJobNo());
