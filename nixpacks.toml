@@ -1,8 +1,9 @@
 ﻿[phases.setup]
 nixPkgs = ['jdk17', 'maven']
+aptPkgs = ['ca-certificates']
 
 [phases.build]
 cmds = ['mvn clean package -DskipTests']
 
 [start]
-cmd = 'java -jar target/*.jar'
+cmd = 'java -Dserver.port= -jar target/*.jar'
