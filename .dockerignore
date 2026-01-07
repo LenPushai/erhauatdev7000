@@ -4,8 +4,8 @@
 
 # Ignore Maven build artifacts
 target/
-!.mvn/wrapper/maven-wrapper.jar
-.mvn/
+# Keep Maven wrapper files - they're needed for build
+!.mvn/wrapper/
 
 # Ignore IDE files
 .idea/
