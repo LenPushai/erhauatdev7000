@@ -14,6 +14,10 @@ import com.erha.ops.entity.JobTask;
 import com.erha.ops.rfq.repository.RFQRepository;
 import com.erha.ops.repository.QuoteRepository;
 import com.erha.ops.repository.ClientRepository;
+import com.erha.ops.rfq.repository.RFQLineItemRepository;
+import com.erha.ops.repository.JobLineItemRepository;
+import com.erha.ops.rfq.entity.RFQLineItem;
+import com.erha.ops.entity.JobLineItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +59,12 @@ public class JobController {
 
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private RFQLineItemRepository rfqLineItemRepository;
+
+    @Autowired
+    private JobLineItemRepository jobLineItemRepository;
 
     @GetMapping
     public ResponseEntity<List<Job>> getAllJobs() {
@@ -171,6 +181,22 @@ public class JobController {
 
             Job savedJob = jobRepository.save(job);
             logger.info("Saved job to database: ID={}", savedJob.getJobId());
+
+            // Copy RFQ line items to Job line items
+            List<RFQLineItem> rfqLineItems = rfqLineItemRepository.findByRfqIdOrderByLineNumberAsc(rfqId);
+            logger.info("Found {} RFQ line items to copy", rfqLineItems.size());
+            for (RFQLineItem rfqItem : rfqLineItems) {
+                JobLineItem jobItem = new JobLineItem();
+                jobItem.setJobId(savedJob.getJobId());
+                jobItem.setLineNumber(rfqItem.getLineNumber());
+                jobItem.setDescription(rfqItem.getDescription());
+                jobItem.setQuantity(rfqItem.getQuantity());
+                jobItem.setUnitOfMeasure(rfqItem.getUnitOfMeasure());
+                jobItem.setSource("RFQ");
+                jobItem.setStatus("PENDING");
+                jobLineItemRepository.save(jobItem);
+            }
+            logger.info("Copied {} line items from RFQ to Job", rfqLineItems.size());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
