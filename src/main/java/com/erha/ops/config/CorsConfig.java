@@ -1,4 +1,4 @@
-﻿package com.erha.ops.config;
+package com.erha.ops.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
