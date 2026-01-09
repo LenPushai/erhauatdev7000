@@ -1,9 +1,8 @@
-﻿# Ignore Git files
+# Ignore Git files
 .git
 .gitignore
 
 # Ignore Maven build artifacts
-target/
 # Keep Maven wrapper files - they're needed for build
 !.mvn/wrapper/
 
